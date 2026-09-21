@@ -46,13 +46,12 @@ AI helped design all of these tests. Claude used `streamlit.testing.v1.AppTest` 
 
 ## 4. What did you learn about Streamlit and state?
 
-- How would you explain Streamlit "reruns" and session state to a friend who has never used Streamlit?
+I'd tell a friend that a Streamlit app is not like a normal program that keeps running in the background — every time you click *any* button or type in *any* box, Streamlit throws away the whole screen and re-runs your `.py` file from the very top line to the very bottom, like refreshing a page. That's a "rerun." The catch is that all your normal Python variables get wiped out on every rerun, so if you want something to survive between clicks — like the secret number, how many attempts you've used, or whether you've already won — you can't just store it in a regular variable; you have to put it in `st.session_state`, which is a dictionary that Streamlit keeps alive across reruns for that one browser tab. Our bugs were basically all "state" bugs in disguise: the New Game bug happened because we updated *some* session-state keys (`attempts`, `secret`) but forgot to update another one (`status`), so the leftover old value kept controlling what happened on the next rerun even after the reset. Once I understood that every widget interaction means "run the entire script again from scratch, and session_state is the only memory that survives," these bugs stopped feeling mysterious and started feeling like ordinary "you forgot to reset this variable" mistakes.
 
 ---
 
 ## 5. Looking ahead: your developer habits
 
-- What is one habit or strategy from this project that you want to reuse in future labs or projects?
-  - This could be a testing habit, a prompting strategy, or a way you used Git.
-- What is one thing you would do differently next time you work with AI on a coding task?
-- In one or two sentences, describe how this project changed the way you think about AI generated code.
+- The habit I want to keep is verifying every claimed fix two ways before trusting it: reproduce the bug live (in the browser, with the debug panel open) before changing anything, then reproduce the *same* scenario again after the fix and actually watch it behave correctly — and back that up with an automated `pytest` test so the fix stays fixed. Just reading a diff and assuming it worked was never enough in this project; the emoji-stripping test failure in Section 2 is a perfect example of why actually running things catches problems that reading code doesn't.
+- Next time, I'd ask the AI to write the test *first* — before or right alongside the fix — instead of fixing everything first and writing tests at the end. Writing the secret-type-flip test earlier would have caught that bug (and the attempts off-by-one) as soon as I found them, instead of leaving them un-fixed for a few conversation turns after I'd already identified them in the reflection log.
+- This project changed how I think about AI-generated code: it's a strong first draft that still needs a human (or a test suite) to catch subtle, silent logic bugs — like a hint message quietly getting swapped or a session-state key quietly not getting reset — because that kind of code runs without ever throwing an error, so nothing forces you to notice it's wrong except actually playing the game or writing a test that checks the *right* thing.
